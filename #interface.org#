@@ -1,0 +1,25 @@
+* IfShare
+Map<IProduct, IOffer> getOffers();
+
+List<IOffer> getOffers(IProduct product);
+
+IOffer addOffer(IPerson seller, IProduct product, ProductState productState, float price, stock int);
+
+IProduct addProduct(String id, String name, String description);
+
+List<IProduct> getProducts();
+
+* IOffer  
+IProduct getProduct();
+
+IPerson getSeller();
+
+int getId();
+
+ProductState getProductState();
+
+float getPrice();
+
+int getStock();
+
+List<Purchase> getPurchases();
