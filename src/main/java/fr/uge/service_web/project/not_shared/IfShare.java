@@ -1,61 +1,92 @@
 package fr.uge.service_web.project.not_shared;
 
+import fr.uge.service_web.project.not_shared.database.dao.OfferDAO;
+import fr.uge.service_web.project.not_shared.database.dao.ProductDAO;
+import fr.uge.service_web.project.not_shared.database.dao.UserDAO;
+import fr.uge.service_web.project.not_shared.exception.UncheckedRemoteException;
+import fr.uge.service_web.project.not_shared.database.model.OfferModel;
+import fr.uge.service_web.project.not_shared.database.model.ProductModel;
+import fr.uge.service_web.project.not_shared.database.model.UserModel;
 import fr.uge.service_web.project.shared.*;
 
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class IfShare extends UnicastRemoteObject implements IfShareInterface {
-    private final HashMap<IProduct, List<Offer>> offers = new HashMap<>();
-    private final HashMap<String, Product> products = new HashMap<>();
-
     public IfShare() throws RemoteException {
         super();
     }
 
     @Override
-    public IProduct addProduct(String productID, String productName, String description) throws RemoteException {
-        Product newProduct = new Product(productID, productName, description);
+    public IProduct addProduct(String id, String name, String description) throws RemoteException {
+        ProductModel productModel = new ProductModel(id, name, description);
 
-        synchronized (products) {
-            products.put(productID, newProduct);
-        }
+        ProductDAO.addProduct(productModel);
 
-        return newProduct;
+        return new Product(productModel);
     }
 
     @Override
-    public Set<IProduct> getProducts() throws RemoteException {
-        synchronized (offers) {
-            return new HashSet<>(offers.keySet());
-        }
+    public Set<? extends IProduct> getProducts() throws RemoteException {
+        return ProductDAO.getAll().stream().map(pm -> {
+            try {
+                return new Product(pm);
+            } catch (RemoteException e) {
+                throw new UncheckedRemoteException(e);
+            }
+        }).collect(Collectors.toUnmodifiableSet());
     }
 
     @Override
-    public void addOffer(IUser seller, IProduct product, ProductState productState, float price, int stock) throws RemoteException {
-        Offer newOffer = new Offer(id, seller, product, productState, price, stock);
+    public Map<? extends IProduct, ? extends IOffer> getOffers() throws RemoteException {
+        Set<OfferModel> offers = OfferDAO.getAll();
 
-        synchronized (offers) {
-            offers.compute(product, (key, value) -> {
-                if (value == null)
-                    value = new ArrayList<>();
-
-                value.add(newOffer);
-                return value;
-            });
-        }
+        return offers.stream().collect(
+            Collectors.toUnmodifiableMap(
+                om -> {
+                    try {
+                        return new Product(om.getProduct());
+                    } catch (RemoteException e) {
+                        throw new UncheckedRemoteException(e);
+                    }
+                },
+                om -> {
+                    try {
+                        return new Offer(om);
+                    } catch (RemoteException e) {
+                        throw new UncheckedRemoteException(e);
+                    }
+                }
+            )
+        );
     }
 
     @Override
-    public Optional<List<IOffer>> getOffers(IProduct product) throws RemoteException {
-        synchronized (offers) {
-            List<? extends IOffer> offersForProduct = offers.get(product);
+    public IUser addUser(String id, String firstName, String lastName, String address, String mail) throws RemoteException {
+        UserModel userModel = new UserModel(id, firstName, lastName, address, mail);
 
-            if (offersForProduct == null)
-                return Optional.empty();
+        UserDAO.addUser(userModel);
 
-            return Optional.of(new ArrayList<>(offersForProduct));
-        }
+        return new User(userModel);
+    }
+
+    @Override
+    public IUser getUser(String id) throws RemoteException {
+        return new User(UserDAO.getUser(id));
+    }
+
+    @Override
+    public Set<? extends IUser> getUsers() throws RemoteException {
+        return UserDAO.getUsers().stream().map(
+            um -> {
+                try {
+                    return new User(um);
+                } catch (RemoteException e) {
+                    throw new UncheckedRemoteException(e);
+                }
+            }
+        ).collect(Collectors.toUnmodifiableSet());
     }
 }
