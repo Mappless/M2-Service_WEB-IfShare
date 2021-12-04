@@ -1,14 +1,20 @@
 package fr.uge.service_web.project.not_shared;
 
+import fr.uge.service_web.project.not_shared.database.dao.ProductDAO;
+import fr.uge.service_web.project.not_shared.database.dao.utils.TransactionUtils;
+import fr.uge.service_web.project.not_shared.exception.UncheckedRemoteException;
 import fr.uge.service_web.project.not_shared.database.model.ProductModel;
+import fr.uge.service_web.project.shared.IOffer;
 import fr.uge.service_web.project.shared.IProduct;
 
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 public class Product extends UnicastRemoteObject implements IProduct {
-    private final ProductModel model;
+    private ProductModel model;
 
     public Product(ProductModel model) throws RemoteException {
         super();
@@ -21,27 +27,45 @@ public class Product extends UnicastRemoteObject implements IProduct {
     }
 
     @Override
-    public void setId(String id) throws RemoteException {
-        model.setId(id);
-    }
-
-    @Override
     public String getName() throws RemoteException {
+        model = TransactionUtils.update(model);
         return model.getName();
     }
 
     @Override
     public void setName(String name) throws RemoteException {
-        model.setName(name);
+        TransactionUtils.update(model, m -> m.setName(name));
+    }
+
+    @Override
+    public Set<? extends IOffer> getOffers() {
+        return ProductDAO.getOffers(model).stream().map(
+            om -> {
+                try {
+                    return new Offer(om);
+                } catch (RemoteException e) {
+                    throw new UncheckedRemoteException(e);
+                }
+            }
+        ).collect(Collectors.toUnmodifiableSet());
     }
 
     @Override
     public String getDescription() throws RemoteException {
+        model = TransactionUtils.update(model);
         return model.getDescription();
     }
 
     @Override
     public void setDescription(String description) throws RemoteException {
-        model.setDescription(description);
+        TransactionUtils.update(model, m -> m.setDescription(description));
+    }
+
+    @Override
+    public String toString() {
+        model = TransactionUtils.update(model);
+        return "Product{" +
+                "model=" + model +
+                '}';
     }
 }

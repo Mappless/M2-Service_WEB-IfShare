@@ -1,62 +1,90 @@
 package fr.uge.service_web.project.not_shared;
 
-import fr.uge.service_web.project.shared.IOffer;
-import fr.uge.service_web.project.shared.IUser;
-import fr.uge.service_web.project.shared.IProduct;
-import fr.uge.service_web.project.shared.ProductState;
+import fr.uge.service_web.project.not_shared.database.dao.OfferDAO;
+import fr.uge.service_web.project.not_shared.database.dao.utils.TransactionUtils;
+import fr.uge.service_web.project.not_shared.database.model.OfferModel;
+import fr.uge.service_web.project.shared.*;
 
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
+import java.util.List;
 import java.util.Objects;
-import java.util.concurrent.ArrayBlockingQueue;
 
 public class Offer extends UnicastRemoteObject implements IOffer {
-    private final int id;
-    private final IUser seller;
-    private final IProduct product;
-    private final ProductState productState;
-    private float price;
-    private int stock;
-    private final ArrayBlockingQueue<Command> waitingQueue = new ArrayBlockingQueue<>(50);
+    private OfferModel model;
 
-    public Offer(int id, IUser seller, IProduct product, ProductState productState, float price, int stock) throws RemoteException {
+    public Offer(OfferModel model) throws RemoteException {
         super();
-        this.id = id;
-        this.seller = Objects.requireNonNull(seller);
-        this.product = Objects.requireNonNull(product);
-        this.productState = productState;
+        this.model = Objects.requireNonNull(model);
+    }
 
-        if (price < 0)
-            throw new IllegalArgumentException("Price cannot be negative.");
-        this.price = price;
-
-        if (stock < 0)
-            throw new IllegalArgumentException("Stock cannot be negative.");
-        this.stock = stock;
+    public static Offer getOffer(int id) throws RemoteException {
+        return new Offer(OfferDAO.getOffer(id));
     }
 
     @Override
     public int getId() throws RemoteException {
-        return id;
+        return model.getId();
     }
 
+    @Override
     public IUser getSeller() throws RemoteException {
-        return seller;
+        return new User(model.getSeller());
     }
 
+    @Override
     public IProduct getProduct() throws RemoteException {
-        return product;
+        return new Product(model.getProduct());
     }
 
+    @Override
     public ProductState getProductState() throws RemoteException {
-        return productState;
+        return model.getProductState();
     }
 
+    @Override
     public float getPrice() throws RemoteException {
-        return price;
+        model = TransactionUtils.update(model);
+        return model.getPrice();
     }
 
+    @Override
+    public void setPrice(float price) throws RemoteException {
+        TransactionUtils.update(model, m -> m.setPrice(price));
+    }
+
+    @Override
     public int getStock() throws RemoteException {
-        return stock;
+        model = TransactionUtils.update(model);
+        return model.getStock();
+    }
+
+    @Override
+    public void refill(int quantity) throws RemoteException {
+        if (quantity <= 0)
+            throw new IllegalArgumentException("Refill quantity must be positive");
+
+        TransactionUtils.update(model, m -> model.setStock(model.getStock() + quantity));
+        processPurchases();
+    }
+
+    public void processPurchases() throws RemoteException {
+        int stock = getStock();
+        List<Purchase> purchases = OfferDAO.getWaitingPurchases(model).stream()
+                .map(Purchase::new)
+                .toList();
+
+        for (Purchase purchase : purchases) {
+            if (purchase.getQuantity() <= stock) {
+                stock -= purchase.getQuantity();
+                purchase.setStatus(PurchaseStatus.DONE);
+            }
+
+            else
+                break;
+        }
+
+        int currentStock = stock;
+        TransactionUtils.update(model, m -> model.setStock(currentStock));
     }
 }

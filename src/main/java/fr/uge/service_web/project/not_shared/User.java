@@ -1,103 +1,126 @@
 package fr.uge.service_web.project.not_shared;
 
+import fr.uge.service_web.project.not_shared.database.dao.OfferDAO;
+import fr.uge.service_web.project.not_shared.database.dao.ProductDAO;
+import fr.uge.service_web.project.not_shared.database.dao.PurchaseDAO;
+import fr.uge.service_web.project.not_shared.database.dao.UserDAO;
+import fr.uge.service_web.project.not_shared.database.dao.utils.TransactionUtils;
+import fr.uge.service_web.project.not_shared.exception.UncheckedRemoteException;
+import fr.uge.service_web.project.not_shared.database.model.OfferModel;
+import fr.uge.service_web.project.not_shared.database.model.ProductModel;
+import fr.uge.service_web.project.not_shared.database.model.UserModel;
 import fr.uge.service_web.project.shared.*;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.Table;
 import java.rmi.RemoteException;
+import java.rmi.server.UnicastRemoteObject;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
 
-@Entity
-@Table(name = "user")
-public class User implements IUser {
-    @Id
-    @Column(name = "user_id")
-    private String id;
-    private String firstName;
-    private String lastName;
-    private String address;
-    private String mail;
+public class User extends UnicastRemoteObject implements IUser {
+    private UserModel model;
 
-    public User() {}
-
-    public User(String id, String firstName, String lastName, String address, String mail) {
-        this.id = id;
-        this.firstName = firstName;
-        this.lastName = lastName;
-        this.address = address;
-        this.mail = mail;
+    public User(UserModel userModel) throws RemoteException {
+        super();
+        this.model = Objects.requireNonNull(userModel);
     }
 
     @Override
     public String getId() throws RemoteException {
-        return id;
-    }
-
-    @Override
-    public void setId(String id) throws RemoteException {
-        this.id = id;
+        return model.getId();
     }
 
     @Override
     public String getFirstName() throws RemoteException {
-        return firstName;
+        model = TransactionUtils.update(model);
+        return model.getFirstName();
     }
 
     @Override
     public void setFirstName(String firstName) throws RemoteException {
-        this.firstName = Objects.requireNonNull(firstName);
+        TransactionUtils.update(model, m -> m.setFirstName(firstName));
     }
 
     @Override
     public String getLastName() throws RemoteException {
-        return lastName;
+        model = TransactionUtils.update(model);
+        return model.getLastName();
     }
 
     @Override
     public void setLastName(String lastName) throws RemoteException {
-        this.lastName = Objects.requireNonNull(lastName);
+        TransactionUtils.update(model, m -> m.setLastName(lastName));
     }
 
     @Override
     public String getAddress() throws RemoteException {
-        return address;
+        model = TransactionUtils.update(model);
+        return model.getAddress();
     }
 
     @Override
     public void setAddress(String address) throws RemoteException {
-        this.address = Objects.requireNonNull(address);
+        TransactionUtils.update(model, m -> m.setAddress(address));
     }
 
     @Override
     public String getMail() throws RemoteException {
-        return mail;
+        model = TransactionUtils.update(model);
+        return model.getMail();
     }
 
     @Override
     public void setMail(String mail) throws RemoteException {
-        this.mail = Objects.requireNonNull(mail);
+        TransactionUtils.update(model, m -> m.setMail(mail));
     }
 
     @Override
     public IOffer offer(IProduct product, ProductState productState, float price, int stock) throws RemoteException {
-        return null;
+        ProductModel pm = ProductDAO.getProduct(product.getId());
+
+        return new Offer(OfferDAO.addOffer(model, pm, productState, price, stock));
+    }
+
+
+    @Override
+    public IPurchase purchase(IOffer offer, int quantity) throws RemoteException {
+        OfferModel offerModel = OfferDAO.getOffer(offer.getId());
+
+        Purchase purchase = new Purchase(PurchaseDAO.addPurchase(model, offerModel, quantity));
+        Offer.getOffer(offer.getId()).processPurchases();
+
+        return purchase;
     }
 
     @Override
     public IPurchase purchase(IOffer offer) throws RemoteException {
-        return null;
+        return purchase(offer, 1);
     }
 
     @Override
-    public List<IOffer> getOffers() throws RemoteException {
-        return null;
+    public Set<? extends IOffer> getOffers() throws RemoteException {
+        return UserDAO.getOffers(model).stream().map(
+            om -> {
+                try {
+                    return new Offer(om);
+                } catch (RemoteException e) {
+                    throw new UncheckedRemoteException(e);
+                }
+            }
+        ).collect(Collectors.toUnmodifiableSet());
     }
 
     @Override
-    public List<IPurchase> getPurchases() throws RemoteException {
-        return null;
+    public List<? extends IPurchase> getPurchases() throws RemoteException {
+        return UserDAO.getPurchases(model).stream().map(Purchase::new).toList();
+    }
+
+    @Override
+    public String toString() {
+        model = TransactionUtils.update(model);
+        return "User{" +
+                "model=" + model +
+                '}';
     }
 }
