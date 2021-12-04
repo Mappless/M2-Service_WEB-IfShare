@@ -4,6 +4,7 @@ import fr.uge.service_web.project.shared.IUser;
 
 import javax.persistence.*;
 import java.io.Serializable;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
@@ -23,6 +24,16 @@ public class UserModel implements Serializable {
     @OneToMany(mappedBy = "buyer", cascade = CascadeType.ALL, orphanRemoval = true)
     @OrderBy("timestamp")
     private List<PurchaseModel> purchases;
+
+    public UserModel() {}
+
+    public UserModel(String id, String firstName, String lastName, String address, String mail) {
+        this.id = Objects.requireNonNull(id);
+        this.firstName = Objects.requireNonNull(firstName);
+        this.lastName = Objects.requireNonNull(lastName);
+        this.address = Objects.requireNonNull(address);
+        this.mail = Objects.requireNonNull(mail);
+    }
 
     public String getId() {
         return id;
@@ -62,5 +73,32 @@ public class UserModel implements Serializable {
 
     public void setMail(String mail) {
         this.mail = Objects.requireNonNull(mail);
+    }
+
+    public Set<OfferModel> getOffers() {
+        return offers;
+    }
+
+    public void setOffers(Set<OfferModel> offers) {
+        this.offers = offers;
+    }
+
+    public List<PurchaseModel> getPurchases() {
+        return purchases;
+    }
+
+    public void setPurchases(List<PurchaseModel> purchases) {
+        this.purchases = purchases;
+    }
+
+    @Override
+    public String toString() {
+        return "UserModel{" +
+                "id='" + id + '\'' +
+                ", firstName='" + firstName + '\'' +
+                ", lastName='" + lastName + '\'' +
+                ", address='" + address + '\'' +
+                ", mail='" + mail + '\'' +
+                '}';
     }
 }

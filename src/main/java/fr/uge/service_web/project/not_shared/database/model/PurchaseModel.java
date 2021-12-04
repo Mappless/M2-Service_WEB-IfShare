@@ -1,13 +1,10 @@
 package fr.uge.service_web.project.not_shared.database.model;
 
-import fr.uge.service_web.project.not_shared.Offer;
-import fr.uge.service_web.project.shared.IOffer;
-import fr.uge.service_web.project.shared.IPurchase;
 import fr.uge.service_web.project.shared.PurchaseStatus;
 
 import javax.persistence.*;
 import java.io.Serializable;
-import java.rmi.RemoteException;
+import java.time.Instant;
 import java.util.Date;
 import java.util.Objects;
 
@@ -21,7 +18,7 @@ public class PurchaseModel implements Serializable {
     @ManyToOne
     private UserModel buyer;
     @ManyToOne
-    private Offer offer;
+    private OfferModel offer;
     private int quantity;
     @Temporal(TemporalType.TIMESTAMP)
     private Date timestamp;
@@ -30,13 +27,15 @@ public class PurchaseModel implements Serializable {
 
     public PurchaseModel() {}
 
-    public PurchaseModel(Offer offer, int quantity, PurchaseStatus status) {
+    public PurchaseModel(OfferModel offer, UserModel buyer, int quantity) {
         this.offer = Objects.requireNonNull(offer);
+        this.buyer = Objects.requireNonNull(buyer);
 
         if (quantity <= 0)
             throw new IllegalArgumentException("Quantity can't be negative.");
         this.quantity = quantity;
-        this.status = status;
+        this.status = PurchaseStatus.WAITING;
+        this.timestamp = Date.from(Instant.now());
     }
 
     public void add(int quantity) {
@@ -61,11 +60,11 @@ public class PurchaseModel implements Serializable {
         this.id = id;
     }
 
-    public IOffer getOffer() {
+    public OfferModel getOffer() {
         return offer;
     }
 
-    public void setOffer(Offer offer) {
+    public void setOffer(OfferModel offer) {
         this.offer = Objects.requireNonNull(offer);
     }
 
@@ -85,5 +84,21 @@ public class PurchaseModel implements Serializable {
 
     public void setStatus(PurchaseStatus status) {
         this.status = status;
+    }
+
+    public UserModel getBuyer() {
+        return buyer;
+    }
+
+    public void setBuyer(UserModel buyer) {
+        this.buyer = buyer;
+    }
+
+    public Date getTimestamp() {
+        return timestamp;
+    }
+
+    public void setTimestamp(Date timestamp) {
+        this.timestamp = timestamp;
     }
 }
