@@ -1,79 +1,43 @@
 package fr.uge.service_web.project.not_shared.database.dao;
 
-import fr.uge.service_web.project.not_shared.Product;
-import fr.uge.service_web.project.not_shared.database.DBConnection;
-import fr.uge.service_web.project.not_shared.database.exception.FailedToRetrieveProductException;
+import fr.uge.service_web.project.not_shared.database.dao.utils.TransactionUtils;
+import fr.uge.service_web.project.not_shared.database.model.OfferModel;
 import fr.uge.service_web.project.not_shared.database.model.ProductModel;
 
-import java.rmi.RemoteException;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.List;
+import javax.persistence.TypedQuery;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 public class ProductDAO {
-    private static Product fromResultSet(ResultSet rs) throws SQLException, RemoteException {
-        String id = rs.getString("id");
-        String name = rs.getString("name");
-        String description = rs.getString("description");
-
-        return new Product(id, name, description);
+    public static void addProduct(ProductModel productModel) {
+        TransactionUtils.inTransaction(
+            (em, txn) -> {
+                em.persist(productModel);
+                return null;
+            }
+        );
     }
 
-    public static List<Product> getAll() throws SQLException, RemoteException {
-        Connection connection = DBConnection.get();
-        List<Product> products = new ArrayList<>();
-
-        ResultSet rs = connection.createStatement().executeQuery("SELECT * FROM " + ProductModel.TABLE_NAME);
-
-        while (rs.next())
-            products.add(fromResultSet(rs));
-
-        return products;
+    public static ProductModel getProduct(String id) {
+        return TransactionUtils.inTransaction((em, txn) -> em.find(ProductModel.class, id));
     }
 
-    public static Product getByID(String id) throws SQLException, RemoteException {
-        Connection connection = DBConnection.get();
-        String query = "SELECT * FROM " + ProductModel.TABLE_NAME + " WHERE id=?";
-
-        PreparedStatement statement = connection.prepareStatement(query);
-        statement.setString(0, id);
-
-        ResultSet rs = statement.executeQuery();
-
-        if (!rs.next())
-            throw new FailedToRetrieveProductException("Failed to retrieve product with ID " + id);
-
-        return fromResultSet(rs);
+    public static Set<ProductModel> getAll() {
+        return TransactionUtils.inTransaction(
+            (em, txn) ->  {
+                TypedQuery<ProductModel> query = em.createQuery("SELECT p FROM ProductModel p", ProductModel.class);
+                return query.getResultStream().collect(Collectors.toUnmodifiableSet());
+            }
+        );
     }
 
-    public static List<Product> getByName(String name) throws SQLException, RemoteException {
-        Connection connection = DBConnection.get();
-        List<Product> products = new ArrayList<>();
-        String query = "SELECT * FROM " + ProductModel.TABLE_NAME + " WHERE name LIKE '%?%'";
-
-        PreparedStatement statement = connection.prepareStatement(query);
-        statement.setString(0, name);
-
-        ResultSet rs = statement.executeQuery();
-
-        while (rs.next())
-            products.add(fromResultSet(rs));
-
-        return products;
-    }
-
-    public static boolean addProduct(Product product) throws SQLException, RemoteException {
-        Connection connection = DBConnection.get();
-        String query = "INSERT INTO " + ProductModel.TABLE_NAME + "(id, name, description) VALUES (?, ?, ?)";
-
-        PreparedStatement statement = connection.prepareStatement(query);
-        statement.setString(0, product.getId());
-        statement.setString(1, product.getName());
-        statement.setString(2, product.getDescription());
-
-        return statement.executeUpdate() == 1;
+    public static Set<OfferModel> getOffers(ProductModel productModel) {
+        return TransactionUtils.inTransaction(
+            (em, txn) -> {
+                TypedQuery<OfferModel> query = em.createQuery("SELECT o FROM OfferModel o WHERE o.product = :product", OfferModel.class);
+                query.setParameter("product", productModel);
+                return query.getResultStream().collect(Collectors.toUnmodifiableSet());
+            }
+        );
     }
 }

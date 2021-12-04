@@ -1,34 +1,53 @@
 package fr.uge.service_web.project.not_shared.database.dao;
 
-import fr.uge.service_web.project.not_shared.Offer;
-import fr.uge.service_web.project.not_shared.database.DBConnection;
-import fr.uge.service_web.project.not_shared.database.exception.FailedToRetrieveProductException;
+import fr.uge.service_web.project.not_shared.database.dao.utils.TransactionUtils;
 import fr.uge.service_web.project.not_shared.database.model.OfferModel;
 import fr.uge.service_web.project.not_shared.database.model.ProductModel;
+import fr.uge.service_web.project.not_shared.database.model.PurchaseModel;
+import fr.uge.service_web.project.not_shared.database.model.UserModel;
+import fr.uge.service_web.project.shared.ProductState;
+import fr.uge.service_web.project.shared.PurchaseStatus;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import javax.persistence.TypedQuery;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 public class OfferDAO {
-    private static Offer fromResultSet(ResultSet rs) {
+    public static OfferModel addOffer(UserModel userModel, ProductModel productModel, ProductState state, float price, int stock) {
+        OfferModel offerModel = new OfferModel(userModel, productModel, state, price, stock);
 
+        TransactionUtils.inTransaction(
+            (em, txn) ->  {
+                em.persist(offerModel);
+                return null;
+            }
+        );
+
+        return offerModel;
     }
 
-    public List<Offer> getByProductId(String id) throws SQLException {
-        Connection connection = DBConnection.get();
-        String query = "SELECT * FROM offer INNER JOIN person ON offer.seller_id = person.person_id "
-                     + "INNER JOIN product ON offer.product_id = product.product_id WHERE product_id=?";
-        PreparedStatement statement = connection.prepareStatement(query);
-        statement.setString(0, id);
+    public static OfferModel getOffer(int id) {
+        return TransactionUtils.inTransaction((em, txn) -> em.find(OfferModel.class, id));
+    }
 
-        ResultSet rs = statement.executeQuery();
+    public static Set<OfferModel> getAll() {
+        return TransactionUtils.inTransaction(
+            (em, txn) ->  {
+                TypedQuery<OfferModel> query = em.createQuery("SELECT o FROM OfferModel o JOIN FETCH o.product JOIN FETCH o.seller", OfferModel.class);
+                return query.getResultStream().collect(Collectors.toUnmodifiableSet());
+            }
+        );
+    }
 
-        if (!rs.next())
-            throw new FailedToRetrieveProductException("Failed to retrieve product with ID " + id);
-
-        return ProductModel.fromResultSet(rs);
+    public static List<PurchaseModel> getWaitingPurchases(OfferModel offerModel) {
+        return TransactionUtils.inTransaction(
+            (em, txn) ->  {
+                TypedQuery<PurchaseModel> query = em.createQuery("SELECT p FROM PurchaseModel p WHERE p.offer = :offer AND p.status = :status ORDER BY p.timestamp", PurchaseModel.class);
+                query.setParameter("offer", offerModel);
+                query.setParameter("status", PurchaseStatus.WAITING);
+                return query.getResultStream().toList();
+            }
+        );
     }
 }
