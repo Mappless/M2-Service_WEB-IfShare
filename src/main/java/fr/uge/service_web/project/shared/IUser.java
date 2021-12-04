@@ -28,6 +28,8 @@ public interface IUser extends Remote {
 
     IPurchase purchase(IOffer offer) throws RemoteException;
 
+    IPurchase purchase(IOffer offer, int quantity) throws RemoteException;
+
     Set<? extends IOffer> getOffers() throws RemoteException;
 
     List<? extends IPurchase> getPurchases() throws RemoteException;
