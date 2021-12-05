@@ -39,7 +39,7 @@ public class User extends UnicastRemoteObject implements IUser {
 
     @Override
     public void setFirstName(String firstName) throws RemoteException {
-        TransactionUtils.load(model.getClass(), model.getId(), m -> m.setFirstName(firstName));
+        TransactionUtils.update(model.getClass(), model.getId(), m -> m.setFirstName(firstName));
     }
 
     @Override
@@ -50,7 +50,7 @@ public class User extends UnicastRemoteObject implements IUser {
 
     @Override
     public void setLastName(String lastName) throws RemoteException {
-        TransactionUtils.load(model.getClass(), model.getId(), m -> m.setLastName(lastName));
+        TransactionUtils.update(model.getClass(), model.getId(), m -> m.setLastName(lastName));
     }
 
     @Override
@@ -61,7 +61,7 @@ public class User extends UnicastRemoteObject implements IUser {
 
     @Override
     public void setAddress(String address) throws RemoteException {
-        TransactionUtils.load(model.getClass(), model.getId(), m -> m.setAddress(address));
+        TransactionUtils.update(model.getClass(), model.getId(), m -> m.setAddress(address));
     }
 
     @Override
@@ -72,7 +72,7 @@ public class User extends UnicastRemoteObject implements IUser {
 
     @Override
     public void setMail(String mail) throws RemoteException {
-        TransactionUtils.load(model.getClass(), model.getId(), m -> m.setMail(mail));
+        TransactionUtils.update(model.getClass(), model.getId(), m -> m.setMail(mail));
     }
 
     @Override

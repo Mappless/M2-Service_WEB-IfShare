@@ -34,7 +34,7 @@ public class Product extends UnicastRemoteObject implements IProduct {
 
     @Override
     public void setName(String name) throws RemoteException {
-        TransactionUtils.load(model.getClass(), model.getId(), m -> m.setName(name));
+        TransactionUtils.update(model.getClass(), model.getId(), m -> m.setName(name));
     }
 
     @Override
@@ -58,7 +58,7 @@ public class Product extends UnicastRemoteObject implements IProduct {
 
     @Override
     public void setDescription(String description) throws RemoteException {
-        TransactionUtils.load(model.getClass(), model.getId(), m -> m.setDescription(description));
+        TransactionUtils.update(model.getClass(), model.getId(), m -> m.setDescription(description));
     }
 
     @Override

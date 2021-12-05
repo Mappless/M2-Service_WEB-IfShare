@@ -26,7 +26,7 @@ public class TransactionUtils {
         return result;
     }
 
-    public static <T> void load(Class<T> clazz, Object id, Consumer<? super T> updateFunction) {
+    public static <T> void update(Class<T> clazz, Object id, Consumer<? super T> updateFunction) {
         TransactionUtils.inTransaction(
             (em, txn) -> {
                 T persistentModel = em.find(clazz, id);

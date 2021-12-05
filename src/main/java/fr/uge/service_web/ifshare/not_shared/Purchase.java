@@ -48,7 +48,7 @@ public class Purchase extends UnicastRemoteObject implements IPurchase {
     }
 
     public void setStatus(PurchaseStatus status) {
-        TransactionUtils.load(model.getClass(), model.getId(), m -> m.setStatus(status));
+        TransactionUtils.update(model.getClass(), model.getId(), m -> m.setStatus(status));
     }
 
     @Override
