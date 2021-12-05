@@ -45,27 +45,16 @@ public class IfShare extends UnicastRemoteObject implements IfShareInterface {
     }
 
     @Override
-    public Map<? extends IProduct, ? extends IOffer> getOffers() throws RemoteException {
-        Set<OfferModel> offers = OfferDAO.getAll();
-
-        return offers.stream().collect(
-            Collectors.toUnmodifiableMap(
-                om -> {
-                    try {
-                        return new Product(om.getProduct());
-                    } catch (RemoteException e) {
-                        throw new UncheckedRemoteException(e);
-                    }
-                },
-                om -> {
-                    try {
-                        return new Offer(om);
-                    } catch (RemoteException e) {
-                        throw new UncheckedRemoteException(e);
-                    }
+    public Set<? extends IOffer> getOffers() throws RemoteException {
+        return OfferDAO.getAll().stream().map(
+            om -> {
+                try {
+                    return new Offer(om);
+                } catch (RemoteException e) {
+                    throw new UncheckedRemoteException(e);
                 }
-            )
-        );
+            }
+        ).collect(Collectors.toUnmodifiableSet());
     }
 
     @Override

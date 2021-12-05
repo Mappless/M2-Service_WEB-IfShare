@@ -94,4 +94,16 @@ public class Offer extends UnicastRemoteObject implements IOffer {
                 "model=" + model +
                 '}';
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Offer offer)) return false;
+        return model.equals(offer.model);
+    }
+
+    @Override
+    public int hashCode() {
+        return model.hashCode();
+    }
 }

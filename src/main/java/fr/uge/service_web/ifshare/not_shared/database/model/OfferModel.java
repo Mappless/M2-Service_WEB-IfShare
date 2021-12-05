@@ -1,5 +1,6 @@
 package fr.uge.service_web.ifshare.not_shared.database.model;
 
+import fr.uge.service_web.ifshare.not_shared.Offer;
 import fr.uge.service_web.ifshare.shared.ProductState;
 
 import javax.persistence.*;
@@ -96,5 +97,17 @@ public class OfferModel implements Serializable {
                 ", price=" + price +
                 ", stock=" + stock +
                 '}';
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof OfferModel offerModel)) return false;
+        return getId() == offerModel.getId();
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(getId());
     }
 }

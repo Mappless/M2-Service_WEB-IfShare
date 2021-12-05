@@ -123,4 +123,16 @@ public class User extends UnicastRemoteObject implements IUser {
                 "model=" + model +
                 '}';
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof User user)) return false;
+        return model.equals(user.model);
+    }
+
+    @Override
+    public int hashCode() {
+        return model.hashCode();
+    }
 }

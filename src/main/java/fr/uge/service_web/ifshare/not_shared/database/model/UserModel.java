@@ -98,4 +98,16 @@ public class UserModel implements Serializable {
                 ", mail='" + mail + '\'' +
                 '}';
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof UserModel userModel)) return false;
+        return getId().equals(userModel.getId());
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(getId());
+    }
 }

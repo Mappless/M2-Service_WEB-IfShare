@@ -55,4 +55,16 @@ public class Purchase implements IPurchase {
                 "model=" + model +
                 '}';
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Purchase purchase)) return false;
+        return model.equals(purchase.model);
+    }
+
+    @Override
+    public int hashCode() {
+        return model.hashCode();
+    }
 }
