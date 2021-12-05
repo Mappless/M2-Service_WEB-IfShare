@@ -28,13 +28,13 @@ public class Product extends UnicastRemoteObject implements IProduct {
 
     @Override
     public String getName() throws RemoteException {
-        model = TransactionUtils.update(model.getClass(), model.getId());
+        model = TransactionUtils.load(model.getClass(), model.getId());
         return model.getName();
     }
 
     @Override
     public void setName(String name) throws RemoteException {
-        TransactionUtils.update(model.getClass(), model.getId(), m -> m.setName(name));
+        TransactionUtils.load(model.getClass(), model.getId(), m -> m.setName(name));
     }
 
     @Override
@@ -52,18 +52,18 @@ public class Product extends UnicastRemoteObject implements IProduct {
 
     @Override
     public String getDescription() throws RemoteException {
-        model = TransactionUtils.update(model.getClass(), model.getId());
+        model = TransactionUtils.load(model.getClass(), model.getId());
         return model.getDescription();
     }
 
     @Override
     public void setDescription(String description) throws RemoteException {
-        TransactionUtils.update(model.getClass(), model.getId(), m -> m.setDescription(description));
+        TransactionUtils.load(model.getClass(), model.getId(), m -> m.setDescription(description));
     }
 
     @Override
     public String toString() {
-        model = TransactionUtils.update(model.getClass(), model.getId());
+        model = TransactionUtils.load(model.getClass(), model.getId());
         return "Product{" +
                 "model=" + model +
                 '}';

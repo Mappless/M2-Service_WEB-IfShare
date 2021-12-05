@@ -1,17 +1,17 @@
 package fr.uge.service_web.ifshare.shared;
 
-import java.io.Serializable;
+import java.rmi.Remote;
 import java.rmi.RemoteException;
 import java.util.Date;
 
-public interface IPurchase extends Serializable {
+public interface IPurchase extends Remote {
     IUser getBuyer() throws RemoteException;
 
     IOffer getOffer() throws RemoteException;
 
-    int getQuantity();
+    int getQuantity() throws RemoteException;
 
-    PurchaseStatus getStatus();
+    PurchaseStatus getStatus() throws RemoteException;
 
-    Date getPurchaseDate();
+    Date getPurchaseDate() throws RemoteException;
 }

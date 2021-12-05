@@ -37,7 +37,7 @@ public class UserModel implements Serializable {
     }
 
     public void setId(String id) {
-        this.id = id;
+        this.id = Objects.requireNonNull(id);
     }
 
     public String getFirstName() {
@@ -77,7 +77,7 @@ public class UserModel implements Serializable {
     }
 
     public void setOffers(Set<OfferModel> offers) {
-        this.offers = offers;
+        this.offers = Objects.requireNonNull(offers);
     }
 
     public List<PurchaseModel> getPurchases() {
@@ -85,7 +85,7 @@ public class UserModel implements Serializable {
     }
 
     public void setPurchases(List<PurchaseModel> purchases) {
-        this.purchases = purchases;
+        this.purchases = Objects.requireNonNull(purchases);
     }
 
     @Override

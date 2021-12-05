@@ -83,7 +83,7 @@ public class PurchaseModel implements Serializable {
     }
 
     public void setStatus(PurchaseStatus status) {
-        this.status = status;
+        this.status = Objects.requireNonNull(status);
     }
 
     public UserModel getBuyer() {
@@ -91,7 +91,7 @@ public class PurchaseModel implements Serializable {
     }
 
     public void setBuyer(UserModel buyer) {
-        this.buyer = buyer;
+        this.buyer = Objects.requireNonNull(buyer);
     }
 
     public Date getTimestamp() {
@@ -99,7 +99,7 @@ public class PurchaseModel implements Serializable {
     }
 
     public void setTimestamp(Date timestamp) {
-        this.timestamp = timestamp;
+        this.timestamp = Objects.requireNonNull(timestamp);
     }
 
     @Override

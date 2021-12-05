@@ -33,46 +33,46 @@ public class User extends UnicastRemoteObject implements IUser {
 
     @Override
     public String getFirstName() throws RemoteException {
-        model = TransactionUtils.update(model.getClass(), model.getId());
+        model = TransactionUtils.load(model.getClass(), model.getId());
         return model.getFirstName();
     }
 
     @Override
     public void setFirstName(String firstName) throws RemoteException {
-        TransactionUtils.update(model.getClass(), model.getId(), m -> m.setFirstName(firstName));
+        TransactionUtils.load(model.getClass(), model.getId(), m -> m.setFirstName(firstName));
     }
 
     @Override
     public String getLastName() throws RemoteException {
-        model = TransactionUtils.update(model.getClass(), model.getId());
+        model = TransactionUtils.load(model.getClass(), model.getId());
         return model.getLastName();
     }
 
     @Override
     public void setLastName(String lastName) throws RemoteException {
-        TransactionUtils.update(model.getClass(), model.getId(), m -> m.setLastName(lastName));
+        TransactionUtils.load(model.getClass(), model.getId(), m -> m.setLastName(lastName));
     }
 
     @Override
     public String getAddress() throws RemoteException {
-        model = TransactionUtils.update(model.getClass(), model.getId());
+        model = TransactionUtils.load(model.getClass(), model.getId());
         return model.getAddress();
     }
 
     @Override
     public void setAddress(String address) throws RemoteException {
-        TransactionUtils.update(model.getClass(), model.getId(), m -> m.setAddress(address));
+        TransactionUtils.load(model.getClass(), model.getId(), m -> m.setAddress(address));
     }
 
     @Override
     public String getMail() throws RemoteException {
-        model = TransactionUtils.update(model.getClass(), model.getId());
+        model = TransactionUtils.load(model.getClass(), model.getId());
         return model.getMail();
     }
 
     @Override
     public void setMail(String mail) throws RemoteException {
-        TransactionUtils.update(model.getClass(), model.getId(), m -> m.setMail(mail));
+        TransactionUtils.load(model.getClass(), model.getId(), m -> m.setMail(mail));
     }
 
     @Override
@@ -113,12 +113,18 @@ public class User extends UnicastRemoteObject implements IUser {
 
     @Override
     public List<? extends IPurchase> getPurchases() throws RemoteException {
-        return UserDAO.getPurchases(model).stream().map(Purchase::new).toList();
+        return UserDAO.getPurchases(model).stream().map(pm -> {
+            try {
+                return new Purchase(pm);
+            } catch (RemoteException e) {
+                throw new UncheckedRemoteException(e);
+            }
+        }).toList();
     }
 
     @Override
     public String toString() {
-        model = TransactionUtils.update(model.getClass(), model.getId());
+        model = TransactionUtils.load(model.getClass(), model.getId());
         return "User{" +
                 "model=" + model +
                 '}';

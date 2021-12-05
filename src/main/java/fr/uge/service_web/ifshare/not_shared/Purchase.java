@@ -8,13 +8,15 @@ import fr.uge.service_web.ifshare.shared.IUser;
 import fr.uge.service_web.ifshare.shared.PurchaseStatus;
 
 import java.rmi.RemoteException;
+import java.rmi.server.UnicastRemoteObject;
 import java.util.Date;
 import java.util.Objects;
 
-public class Purchase implements IPurchase {
+public class Purchase extends UnicastRemoteObject implements IPurchase {
     private PurchaseModel model;
 
-    Purchase(PurchaseModel model) {
+    Purchase(PurchaseModel model) throws RemoteException {
+        super();
         this.model = Objects.requireNonNull(model);
     }
 
@@ -29,24 +31,24 @@ public class Purchase implements IPurchase {
     }
 
     @Override
-    public int getQuantity() {
+    public int getQuantity() throws RemoteException {
         return model.getQuantity();
     }
 
 
     @Override
-    public PurchaseStatus getStatus() {
-        model = TransactionUtils.update(model.getClass(), model.getId());
+    public PurchaseStatus getStatus() throws RemoteException {
+        model = TransactionUtils.load(model.getClass(), model.getId());
         return model.getStatus();
     }
 
     @Override
-    public Date getPurchaseDate() {
+    public Date getPurchaseDate() throws RemoteException {
         return model.getTimestamp();
     }
 
     public void setStatus(PurchaseStatus status) {
-        TransactionUtils.update(model.getClass(), model.getId(), m -> m.setStatus(status));
+        TransactionUtils.load(model.getClass(), model.getId(), m -> m.setStatus(status));
     }
 
     @Override

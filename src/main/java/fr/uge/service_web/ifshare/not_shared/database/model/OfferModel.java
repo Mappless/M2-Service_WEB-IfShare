@@ -52,7 +52,7 @@ public class OfferModel implements Serializable {
     }
 
     public void setSeller(UserModel seller) {
-        this.seller = seller;
+        this.seller = Objects.requireNonNull(seller);
     }
 
     public ProductModel getProduct() {
@@ -60,7 +60,7 @@ public class OfferModel implements Serializable {
     }
 
     public void setProduct(ProductModel product) {
-        this.product = product;
+        this.product = Objects.requireNonNull(product);
     }
 
     public ProductState getProductState() {
@@ -68,7 +68,7 @@ public class OfferModel implements Serializable {
     }
 
     public void setProductState(ProductState productState) {
-        this.productState = productState;
+        this.productState = Objects.requireNonNull(productState);
     }
 
     public float getPrice() {

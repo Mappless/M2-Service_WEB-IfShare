@@ -29,7 +29,7 @@ public class ProductModel implements Serializable {
     }
 
     public void setId(String id) {
-        this.id = id;
+        this.id = Objects.requireNonNull(id);
     }
 
     public String getName() {
@@ -37,7 +37,7 @@ public class ProductModel implements Serializable {
     }
 
     public void setName(String name) {
-        this.name = name;
+        this.name = Objects.requireNonNull(name);
     }
 
     public String getDescription() {
@@ -45,7 +45,7 @@ public class ProductModel implements Serializable {
     }
 
     public void setDescription(String description) {
-        this.description = description;
+        this.description = Objects.requireNonNull(description);
     }
 
     public Set<OfferModel> getOffers() {
@@ -53,7 +53,7 @@ public class ProductModel implements Serializable {
     }
 
     public void setOffers(Set<OfferModel> offers) {
-        this.offers = offers;
+        this.offers = Objects.requireNonNull(offers);
     }
 
     @Override

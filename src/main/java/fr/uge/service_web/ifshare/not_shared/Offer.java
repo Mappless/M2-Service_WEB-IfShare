@@ -3,6 +3,7 @@ package fr.uge.service_web.ifshare.not_shared;
 import fr.uge.service_web.ifshare.not_shared.database.dao.OfferDAO;
 import fr.uge.service_web.ifshare.not_shared.database.utils.TransactionUtils;
 import fr.uge.service_web.ifshare.not_shared.database.model.OfferModel;
+import fr.uge.service_web.ifshare.not_shared.exception.UncheckedRemoteException;
 import fr.uge.service_web.ifshare.shared.*;
 
 import java.rmi.RemoteException;
@@ -44,18 +45,18 @@ public class Offer extends UnicastRemoteObject implements IOffer {
 
     @Override
     public float getPrice() throws RemoteException {
-        model = TransactionUtils.update(model.getClass(), model.getId());
+        model = TransactionUtils.load(model.getClass(), model.getId());
         return model.getPrice();
     }
 
     @Override
     public void setPrice(float price) throws RemoteException {
-        TransactionUtils.update(model.getClass(), model.getId(), m -> m.setPrice(price));
+        TransactionUtils.load(model.getClass(), model.getId(), m -> m.setPrice(price));
     }
 
     @Override
     public int getStock() throws RemoteException {
-        model = TransactionUtils.update(model.getClass(), model.getId());
+        model = TransactionUtils.load(model.getClass(), model.getId());
         return model.getStock();
     }
 
@@ -64,14 +65,20 @@ public class Offer extends UnicastRemoteObject implements IOffer {
         if (quantity <= 0)
             throw new IllegalArgumentException("Refill quantity must be positive");
 
-        TransactionUtils.update(model.getClass(), model.getId(), m -> model.setStock(model.getStock() + quantity));
+        TransactionUtils.load(model.getClass(), model.getId(), m -> model.setStock(model.getStock() + quantity));
         processPurchases();
     }
 
     public void processPurchases() throws RemoteException {
         int stock = getStock();
         List<Purchase> purchases = OfferDAO.getWaitingPurchases(model).stream()
-                .map(Purchase::new)
+                .map(pm -> {
+                    try {
+                        return new Purchase(pm);
+                    } catch (RemoteException e) {
+                        throw new UncheckedRemoteException(e);
+                    }
+                })
                 .toList();
 
         for (Purchase purchase : purchases) {
@@ -85,7 +92,7 @@ public class Offer extends UnicastRemoteObject implements IOffer {
         }
 
         int currentStock = stock;
-        TransactionUtils.update(model.getClass(), model.getId(), m -> model.setStock(currentStock));
+        TransactionUtils.load(model.getClass(), model.getId(), m -> model.setStock(currentStock));
     }
 
     @Override
